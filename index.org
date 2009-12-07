@@ -1,4 +1,5 @@
-* Squash in-language JavaScript SQL
+#+TITLE: Squash in-language JavaScript SQL
+
   by [[http://orangesoda.net/lang.html][Lang]] [2009-10-29 Thu]
 
   Squash is a JavaScript library for expressing SQL queries using
@@ -14,7 +15,7 @@
   Squash depends on [[http://code.google.com/p/sprintf/][sprintf]] (for formatting the date type).
   Try [[file:javascript/squash.html][tests running in the browser]], and see the [[file:squash.js][squash code]].
   
-* Refactoring
+* Future Refactoring
 ** TODO prototype object links, no copying
 ** TODO driver object.
 *** TODO close over table
