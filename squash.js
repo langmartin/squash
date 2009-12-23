@@ -206,8 +206,8 @@ var squash;
        var self = this._clone(); var env = self.env;
        var prev = env.filter || false;
        if (prev) {
-         env.filter = function (rec) {
-           return filter(prev(rec));
+         env.filter = function (rec, driver) {
+           return filter.call(self, prev(rec, driver));
          };
        }
        else env.filter = filter;
