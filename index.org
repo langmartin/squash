@@ -1,23 +1,57 @@
 #+TITLE: Squash in-language JavaScript SQL
+by [[http://orangesoda.net/lang.html][Lang]] [2009-10-29 Thu]
 
-  by [[http://orangesoda.net/lang.html][Lang]] [2009-10-29 Thu]
+Squash is a JavaScript library for expressing SQL queries using
+syntax rather than string concatenation. The expression objects can
+be combined more easily than strings, and ensure that data is typed
+correctly.
 
-  Squash is a JavaScript library for expressing SQL queries using
-  syntax rather than string concatenation. The expression objects can
-  be combined more easily than strings, and ensure that data is typed
-  correctly.
+Squash is loosely modeled on LINQ, but is a great deal more limited
+at the moment. I developed it because I'm working in classic ASP and
+wanted a layer of reasonable abstraction to distance my code from
+the eccentric database layout imposed by the ORM.
 
-  Squash is loosely modeled on LINQ, but is a great deal more limited
-  at the moment. I developed it because I'm working in classic ASP and
-  wanted a layer of reasonable abstraction to distance my code from
-  the eccentric database layout imposed by the ORM.
+Squash depends on [[http://code.google.com/p/sprintf/][sprintf]] (for formatting the date type).
+Try [[file:javascript/squash.html][tests running in the browser]], and see the [[file:squash.js][squash code]].
 
-  Squash depends on [[http://code.google.com/p/sprintf/][sprintf]] (for formatting the date type).
-  Try [[file:javascript/squash.html][tests running in the browser]], and see the [[file:squash.js][squash code]].
-  
-* Future Refactoring
-** TODO prototype object links, no copying
-** TODO driver object.
-*** TODO close over table
-*** TODO register in env
-*** TODO driver creator
+* Plugins
+  by [[http://orangesoda.net/lang.html][Lang]] [2010-01-22 Fri]
+
+  The =squash.fn= namespace exports the internal =statement= object's
+  prototype, and can be used to add statements to the squash language.
+  This is roughly the same mechanism that jQuery uses; it's a nice way
+  to keep the end queries concise and declarative.
+
+  Using the ADO database drivers, the =RecordSet= object's property
+  =MaxRecords= limits the result set, and not all databases support an
+  SQL variation of a limiting command. I like leaving limits in the
+  statement, it simplifies library separation. So, I added a plugin:
+
+#+BEGIN_SRC js2
+squash.fn.limit = function (maxrecords) {
+  var sql = this._clone();
+  sql.env.maxrecords = maxrecords || dds.maxrecords;
+  return sql;
+};
+#+END_SRC
+
+  The limit command marks the statement with a =maxrecords= property,
+  and the database-specific driver's =execute= method reads the limit
+  back out.
+
+* Drivers
+  by [[http://orangesoda.net/lang.html][Lang]] [2010-01-22 Fri]
+
+  A squash driver is an interface supporting the methods =field=,
+  =type=, and =wherein=. Field and type are called with the table and
+  field name. Field returns a mapped field name and type returns a
+  type object, an interface with the methods =tosql= and =toval=.
+  Wherein handles the bulk identifier lookup issue, which varied a lot
+  in my small sample of database backends.
+
+  A more complete driver interface would require the driver to act as
+  an interpreter so that it would be possible to build a backend that
+  did not map to SQL.
+
+  It's up to some other program to actually call the driver and squash
+  object in order to execute a database lookup.
