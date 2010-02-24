@@ -60,6 +60,20 @@ var squash;
        }
        return self;
      },
+     get: function (key) {
+       return this.env[key];
+     },
+     set: function (k0, v0, k1, v1) {
+       var self = this._clone(); var env = self.env;
+       var ii, key, val;
+       for (ii = 0; ii < arguments.length;) {
+         key = arguments[ii++];
+         val = arguments[ii];
+         if (val === undefined) break; // uneven arguments
+         env[key] = val;
+       }
+       return self;
+     },
      from: function (table, extra) {
        var self = this._clone(); var env = self.env;
        if (env.from) throw eFrom;
@@ -141,15 +155,10 @@ var squash;
        return self;
      },
      wherein: function (col, op, values) {
-       var self = this._clone(); var env = self.env; var old = this.env;
-       env.where = function (driver, table, clip) {
-         var result = [driver.wherein(table, col, op, values)];
-         if ((!clip) && old.where) {
-           result = result.concat(old.where(driver, table));
-         }
-         return result;
-       };
-       return self;
+       return this.set(
+         "wherein", values,
+         "wherein_opt", { col: col, op: op }
+       );
      },
      or: function (left, right, op) {
        var self = this._clone(); var env = self.env; var old = this.env;
@@ -303,14 +312,17 @@ var squash;
      // WHERE
      function where (self, driver) {
        var tmp = [];
-       if (self.env.where) {
-         tmp = self.env.where(driver, self._table());
-       }
+       if (self.env.where) tmp = self.env.where(driver, self._table());
+       if (self.env.wherein) tmp.push(wherein(self, driver));
        if (self.env.join) {
          pushif(tmp, where(self.env.join.left, driver));
          pushif(tmp, where(self.env.join.right, driver));
        }
        return tmp.join(' AND ');
+     }
+     function wherein (self, driver) {
+       var opt = self.env.wherein_opt;
+       return driver.wherein(self._table(), opt.col, opt.op, self.env.wherein);
      }
      result.push("WHERE");
      result.push(where(self, driver));
@@ -482,15 +494,15 @@ squash.tests = function () {
       zup = baz.wherein("foo", "=", [1, 2, 3]);
       return "" + zup ==
         "SELECT t1.name FROM item AS t1 WHERE "
-        + "t1.foo IN ('1', '2', '3')"
-        + " AND t1.name = 'lang'";
+        + "t1.name = 'lang'"
+        + " AND t1.foo IN ('1', '2', '3')";
     },
     function () {
       var zup = baz.wherein("foo", "not like", [1, 2, 3]);
       return "" + zup ==
         "SELECT t1.name FROM item AS t1 WHERE "
-        + "t1.foo NOT LIKE IN ('1', '2', '3')"
-        + " AND t1.name = 'lang'";
+        + "t1.name = 'lang'"
+        + " AND t1.foo NOT LIKE IN ('1', '2', '3')";
     },
     function () {
       foo = foo.where("test", "=", "test");
