@@ -5,6 +5,8 @@ var squash;
    var end = null;
    var eRequired = new RangeError("Required statement missing.");
 
+   var late_bindings = {};
+
    squash = function (table, extra) {
      var self = new statement();
      return self.from(table, extra);
@@ -68,6 +70,9 @@ var squash;
      },
      get: function (key) {
        return this.env[key];
+     },
+     late: function (key) {
+       return late_bindings[key] || this.env[key];
      },
      set: function (k0, v0, k1, v1) {
        var self = this._clone(); var env = self.env;
@@ -165,7 +170,7 @@ var squash;
        var self = this.set(
          "wherein", values,
          "where", function (driver, table, clip) {
-           var result = [driver.wherein(table, col, op, self.get("wherein"))];
+           var result = [driver.wherein(table, col, op, self.late("wherein"))];
            if (previous && (!clip)) {
              result = result.concat(previous(driver, table));
            }
@@ -264,6 +269,11 @@ var squash;
      var self = this;
      var result = [];
 
+     // Crummy version of fluid.js
+     var previous_late_bindings = late_bindings;
+     try {
+       late_bindings = env;
+
      // SELECT
      (function () {
         var col;
@@ -347,6 +357,9 @@ var squash;
       })();
 
      return result.join(" ");
+     } finally {
+       late_bindings = previous_late_bindings;
+     }
    };
 
    //// Type Definitions
