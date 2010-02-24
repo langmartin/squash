@@ -74,7 +74,7 @@ var squash;
        var ii, key, val;
        for (ii = 0; ii < arguments.length;) {
          key = arguments[ii++];
-         val = arguments[ii];
+         val = arguments[ii++];
          if (val === undefined) break; // uneven arguments
          env[key] = val;
        }
@@ -171,10 +171,16 @@ var squash;
        op = op || " OR ";
        env.where = function (driver, table, clip) {
          var result = [];
-         function clause (where) {
-           var arr = where.env.where(driver, table, "clip");
-           if (arr.length == 1) return arr[0];
-           return ["(", arr.join(" AND "), ")"].join('');
+         function clause (self) {
+           var where = self.env.where;
+           var wherein = self.env.wherein;
+           var opt = self.env.wherein_opt;
+           var result = (where) ? where(driver, table, "clip") : [];
+           if (wherein) {
+             result.push(driver.wherein(table, opt.col, opt.op, wherein));
+           }
+           if (result.length == 1) return result[0];
+           return ["(", result.join(" AND "), ")"].join('');
          }
          result.push(
            ["(", [clause(left), clause(right)].join(op), ")"].join('')
@@ -553,6 +559,16 @@ squash.tests = function () {
         + "INNER JOIN test AS t2 ON t1.id = t2.id2 "
         + "INNER JOIN bar AS t3 ON t2.id = t3.id "
         + "WHERE t1.foo = '1' AND t2.baz = '1' AND t3.bar = 'foo'";
+    },
+    function () {
+      bar = squash("bar").select("bar");
+      bar = bar.or(
+        bar.where("foo", "=", 1),
+        bar.wherein("foo", "=", [1, 2, 3])
+      );
+      return "" + bar ==
+        "SELECT t1.bar FROM bar AS t1 WHERE"
+        + " (t1.foo = '1' OR t1.foo IN ('1', '2', '3'))";
     }
   );
 };
