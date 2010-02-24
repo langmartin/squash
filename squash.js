@@ -23,6 +23,12 @@ var squash;
      return ((typeof obj == "object") && (obj.length !== undefined));
    }
 
+   function isEmpty (obj) {
+     var key;
+     for (key in obj) return false;
+     return true;
+   }
+
    function map (arr, proc) {
      var result = [];
      for (var ii = 0; ii < arr.length; ii++) {
@@ -313,7 +319,9 @@ var squash;
      function where (self, driver) {
        var tmp = [];
        if (self.env.where) tmp = self.env.where(driver, self._table());
-       if (self.env.wherein) tmp.push(wherein(self, driver));
+       if (self.env.wherein && (! isEmpty(self.env.wherein))) {
+         tmp.push(wherein(self, driver));
+       }
        if (self.env.join) {
          pushif(tmp, where(self.env.join.left, driver));
          pushif(tmp, where(self.env.join.right, driver));
