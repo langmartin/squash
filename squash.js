@@ -5,8 +5,6 @@ var squash;
    var end = null;
    var eRequired = new RangeError("Required statement missing.");
 
-   var late_bindings = {};
-
    squash = function (table, extra) {
      var self = new statement();
      return self.from(table, extra);
@@ -25,10 +23,12 @@ var squash;
      return ((typeof obj == "object") && (obj.length !== undefined));
    }
 
-   function isEmpty (obj) {
-     var key;
-     for (key in obj) return false;
-     return true;
+   function copy (obj) {
+     var result = {};
+     for (var key in obj) {
+       result[key] = obj[key];
+     }
+     return result;
    }
 
    function map (arr, proc) {
@@ -56,34 +56,23 @@ var squash;
    var eFrom = new TypeError("Use join to merge queries");
    var eJoin = new TypeError("Only one join permitted");
 
-  function statement (env, prev) {
+   function statement (env, prev) {
      this.env = env || {};
+     this.env._mutable = {};
      // if (prev) this.prev = prev;
    };
    squash.fn = statement.prototype = {
      _clone: function () {
        var self = new statement();
-       for (var key in this.env) {
-         self.env[key] = this.env[key];
-       }
+       self.env = copy(this.env);
        return self;
      },
-     get: function (key) {
-       return this.env[key];
+     peek: function (key, val) {
+       return this.env._mutable[key];
      },
-     late: function (key) {
-       return late_bindings[key] || this.env[key];
-     },
-     set: function (k0, v0, k1, v1) {
-       var self = this._clone(); var env = self.env;
-       var ii, key, val;
-       for (ii = 0; ii < arguments.length;) {
-         key = arguments[ii++];
-         val = arguments[ii++];
-         if (val === undefined) break; // uneven arguments
-         env[key] = val;
-       }
-       return self;
+     poke: function (key, val) {
+       this.env._mutable[key] = val;
+       return this;
      },
      from: function (table, extra) {
        var self = this._clone(); var env = self.env;
@@ -166,16 +155,18 @@ var squash;
        return self;
      },
      wherein: function (col, op, values) {
-       var previous = this.get("where");
-       var self = this.set(
-         "wherein", values,
-         "where", function (driver, table, clip) {
-           var result = [driver.wherein(table, col, op, self.late("wherein"))];
-           if (previous && (!clip)) {
-             result = result.concat(previous(driver, table));
-           }
-           return result;
-         });
+       var previous = this.env.where;
+       var self = this._clone();
+       self.poke(col, values);
+       self.env.wherein = self.env.wherein || [];
+       self.env.wherein.push(col);
+       self.env.where = function (driver, table, clip) {
+         var result = [driver.wherein(table, col, op, self.peek(col))];
+         if (previous && (!clip)) {
+           result = result.concat(previous(driver, table));
+         }
+         return result;
+       };
        return self;
      },
      or: function (left, right, op) {
@@ -269,11 +260,6 @@ var squash;
      var self = this;
      var result = [];
 
-     // Crummy version of fluid.js
-     var previous_late_bindings = late_bindings;
-     try {
-       late_bindings = env;
-
      // SELECT
      (function () {
         var col;
@@ -357,9 +343,6 @@ var squash;
       })();
 
      return result.join(" ");
-     } finally {
-       late_bindings = previous_late_bindings;
-     }
    };
 
    //// Type Definitions
@@ -521,7 +504,7 @@ squash.tests = function () {
         + " AND t1.name = 'lang'";
     },
     function () {
-      var zup = baz.wherein("foo", "not like", [1, 2, 3]);
+      zup = baz.wherein("foo", "not like", [1, 2, 3]);
       return "" + zup ==
         "SELECT t1.name FROM item AS t1 WHERE "
         + "t1.foo NOT LIKE IN ('1', '2', '3')"
@@ -570,14 +553,13 @@ squash.tests = function () {
         + "WHERE t1.foo = '1' AND t2.baz = '1' AND t3.bar = 'foo'";
     },
     function () {
-      bar = bar.or(
-        bar.where("foo", "=", 1),
-        bar.wherein("foo", "=", [1, 2, 3])
-      );
+      foo = squash("item").where("name", "=", "lang").select(["name"]);
+      bar = foo.wherein("foo", "=", [1, 2, 3]).poke("foo", [2, 4]);
+      bar = foo.or(foo, bar);
       return "" + bar ==
-        "SELECT t1.bar FROM bar AS t1 WHERE"
-        + " (t1.foo = '1' OR t1.foo IN ('1', '2', '3'))"
-        + " AND t1.bar = 'foo'";
+        "SELECT t1.name FROM item AS t1 WHERE"
+        + " (t1.name = 'lang' OR t1.foo IN ('2', '4'))"
+        + " AND t1.name = 'lang'";
     }
   );
 };
