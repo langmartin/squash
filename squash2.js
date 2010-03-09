@@ -83,10 +83,21 @@ var squash;
      not: make_where("not")
    };
 
-   squash.source = {
-     object: function (obj) {
-       this.obj = obj;
-     }
+   squash.source = {};
+   squash.source.object = function (obj) {
+     this.obj = obj;
+   };
+
+   function operate (a1, op, a2) {
+     if (op == "==")  return a1 == a2;
+     if (op == "===")  return a1 === a2;
+     if (op == "!=")  return a1 != a2;
+     if (op == "!==")  return a1 !== a2;
+     if (op == "<")  return a1 < a2;
+     if (op == "<=") return a1 <= a2;
+     if (op == ">")  return a1 > a2;
+     if (op == ">=") return a1 >= a2;
+     return false;
    };
 
    squash.source.object.prototype = {
