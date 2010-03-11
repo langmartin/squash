@@ -15,9 +15,9 @@ Squash depends on [[http://code.google.com/p/sprintf/][sprintf]] (for formatting
 Try [[file:javascript/squash.html][tests running in the browser]], and see the [[file:squash.js][squash code]].
 
 * R1
-** Plugins
   by [[http://orangesoda.net/lang.html][Lang]] [2010-01-22 Fri]
 
+** Plugins
   The =squash.fn= namespace exports the internal =statement= object's
   prototype, and can be used to add statements to the squash language.
   This is roughly the same mechanism that jQuery uses; it's a nice way
@@ -41,8 +41,6 @@ squash.fn.limit = function (maxrecords) {
   back out.
 
 ** Drivers
-   by [[http://orangesoda.net/lang.html][Lang]] [2010-01-22 Fri]
-
    A squash driver is an interface supporting the methods =field=,
    =type=, and =wherein=. Field and type are called with the table and
    field name. Field returns a mapped field name and type returns a
@@ -58,7 +56,7 @@ squash.fn.limit = function (maxrecords) {
    object in order to execute a database lookup.
 
 * R2
-  by [[http://orangesoda.net/lang.html][Lang]] [2010-03-09 Tue]
+  by [[http://orangesoda.net/lang.html][Lang]] [2010-03-11 Thu]
 
   a rewrite focusing on simplified code. Each statement is isomorphic
   with a closure, implemented as an object in order to allow
@@ -67,4 +65,18 @@ squash.fn.limit = function (maxrecords) {
   appropriate, if I can figure it out. This is motivated almost
   entirely by SQL statement limits.
 
-  
+** Unclosure
+   A late-bound closure. The closure contains a =proc=, =args=, and
+   =k=; and implements the the =call= method which execute the stack
+   of calls using the =apply= procedure provided by an =env= object.
+
+   The unclosure object prototype contains the public method
+   interface, also bound to =squash.fn=.
+
+** Env
+   Implements =apply= and =receive=, the final continuation. =apply=
+   can be used to trim recursion or selectively execute the unclosed
+   calls in the statement.
+
+** Squash
+   The public constructor returns a correctly formatted object.
