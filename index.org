@@ -11,11 +11,11 @@ at the moment. I developed it because I'm working in classic ASP and
 wanted a layer of reasonable abstraction to distance my code from
 the eccentric database layout imposed by the ORM.
 
-Squash depends on [[http://code.google.com/p/sprintf/][sprintf]] (for formatting the date type).
-Try [[file:javascript/squash.html][tests running in the browser]], and see the [[file:squash.js][squash code]].
-
 * R1
   by [[http://orangesoda.net/lang.html][Lang]] [2010-01-22 Fri]
+
+  Squash depends on [[http://code.google.com/p/sprintf/][sprintf]] (for formatting the date type).
+  Try [[file:javascript/squash.html][tests running in the browser]], and see the [[file:squash.js][squash code]].
 
 ** Plugins
   The =squash.fn= namespace exports the internal =statement= object's
@@ -58,12 +58,13 @@ squash.fn.limit = function (maxrecords) {
 * R2
   by [[http://orangesoda.net/lang.html][Lang]] [2010-03-11 Thu]
 
-  a rewrite focusing on simplified code. Each statement is isomorphic
-  with a closure, implemented as an object in order to allow
-  inspection and manipulation of arguments at interpretation rather
-  than at binding. Something like shift and reset might be
-  appropriate, if I can figure it out. This is motivated almost
-  entirely by SQL statement limits.
+  A rewrite focusing on simplification. The [[file:squash.js][code]]. [[file:squash2.html][Tests]].
+
+  Each statement is isomorphic with a closure, implemented as an
+  object in order to allow inspection and manipulation of arguments at
+  interpretation rather than at binding. Something like shift and
+  reset might be appropriate, if I can figure it out. This is
+  motivated almost entirely by SQL statement limits.
 
 ** Unclosure
    A late-bound closure. The closure contains a =proc=, =args=, and
@@ -80,3 +81,4 @@ squash.fn.limit = function (maxrecords) {
 
 ** Squash
    The public constructor returns a correctly formatted object.
+
