@@ -31,7 +31,7 @@ var squash;
    };
 
    var slice = Array.prototype.slice;
-   
+
    function unclosure (k, proc, args) {
      this.k = k;
      this.proc = proc;
@@ -40,9 +40,8 @@ var squash;
 
    unclosure.prototype = {
      call: function (env) {
-       if (! this.k) this.k = env.execute;
-       var value = env[this.proc].apply(env, this.args);
-       this.k.call(value);
+       if (! this.k) this.k = env.receive;
+       this.k.call(k, env.apply(this));
      }
    };
 
@@ -88,19 +87,30 @@ var squash;
      this.obj = obj;
    };
 
-   function operate (a1, op, a2) {
-     if (op == "==")  return a1 == a2;
-     if (op == "===")  return a1 === a2;
-     if (op == "!=")  return a1 != a2;
-     if (op == "!==")  return a1 !== a2;
-     if (op == "<")  return a1 < a2;
-     if (op == "<=") return a1 <= a2;
-     if (op == ">")  return a1 > a2;
-     if (op == ">=") return a1 >= a2;
-     return false;
+   //// An elegant argument for first-class operators.
+   function operate (op, a1, a2) {
+     switch (op) {
+     case "=": return a1 == a2;
+     case "==": return a1 == a2;
+     case "===": return a1 === a2;
+     case "!=": return a1 != a2;
+     case "<>": return a1 != a2;
+     case "!==": return a1 !== a2;
+     case "<": return a1 < a2;
+     case "<=": return a1 <= a2;
+     case ">": return a1 > a2;
+     case ">=": return a1 >= a2;
+     case "&&": return a1 && a2;
+     case "and": return a1 && a2;
+     case "||": return a1 || a2;
+     case "or": return a1 || a2;
+     case "!": return !a1;
+     case "not": return !a1;
+     default: return false;
+     };
    };
 
-   squash.source.object.prototype = {
+   var objpt = squash.source.object.prototype = {
      select: function (key1, key2) {
        var result = {};
        for (var ii = 0; ii < arguments.length; ii++) {
@@ -109,32 +119,58 @@ var squash;
        return result;
      },
      where: function (key, op, val) {
-       if (op == "=")  return this.obj[key] === val;
-       if (op == "!")  return this.obj[key] !== val;
-       if (op == "<")  return this.obj[key] < val;
-       if (op == "<=") return this.obj[key] <= val;
-       if (op == ">")  return this.obj[key] > val;
-       if (op == ">=")  return this.obj[key] >= val;
-       return false;
+       if (operate(op, key, val)) return this;
+       else return false;
      },
      assert: function (key, op, key2) {
        return this.where(key, op, this.obj[key2]);
      },
      logical: function (op, statement1, statement2) {
-       var optable = {
-         "and": function (v, r) { return r && v; },
-         "or":  function (v, r) { return r || v; },
-         "not": function (v, r) { return r && !v; }
+       var env = {
+         apply: function (cl) {
+           if (! ((cl.proc == "where") || (cl.proc == "assert"))) return null;
+           return this[cl.proc].apply(this, cl.args);
+         },
+         receive: function (value) {
+           this.result = value;
+           return value;
+         }
        };
-       return foldr(optable[op], true, slice.call(arguments, 1));
+
+       return foldr(
+         function (head, tail) {
+           return operate(op, head.call(env), tail);
+         },
+         true,
+         slice.call(arguments, 1)
+       );
      },
      group: function () {},
      order: function () {}
    };
 
    squash.source.objects = function (arr) {
-     this.objects = arr;
+     this.data = arr;
+     this.result = [];
    };
-   squash.source.objects.prototype = squash.source.object.prototype;
-   
+
+   squash.source.objects.prototype = {
+     select: function (key1, key2) {
+       var result = [], obj;
+       for (var ii = 0; ii < this.result.length; ii++) {
+         this.obj = this.result[ii];
+         result.push(objpt.where.apply(this, slice.call(arguments)));
+       }
+       return result;
+     },
+     where: function (key, op, val) {
+       var data = (this.result.length > 0) ? this.result : this.data;
+       for (var ii = 0; ii < data.length; ii++) {
+         this.obj = data[ii];
+         this.obj = objpt.where.call(this, key, op, val);
+       }
+       return result;
+     },
+     assert: objpt.assert
+   };
  });
