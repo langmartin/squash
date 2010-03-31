@@ -1,4 +1,4 @@
-#+TITLE: Squash in-language JavaScript SQL
+#+TITLE: Squash JavaScript SQL Libarary
 by [[http://orangesoda.net/lang.html][Lang]] [2009-10-29 Thu]
 
 Squash is a JavaScript library for expressing SQL queries using
@@ -58,7 +58,7 @@ squash.fn.limit = function (maxrecords) {
 * R2
   by [[http://orangesoda.net/lang.html][Lang]] [2010-03-11 Thu]
 
-  A rewrite focusing on simplification. The [[file:squash.js][code]]. [[file:squash2.html][Tests]].
+  A rewrite focusing on simplification. The [[file:squash2.js][code]]. [[file:squash2.html][Tests]].
 
   Each statement is isomorphic with a closure, implemented as an
   object in order to allow inspection and manipulation of arguments at
