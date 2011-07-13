@@ -10,21 +10,37 @@ var squash3;
    }
 
    function lookup (self, word) {
-     if (this._tail  == squashNull) return eNotFound();
-     if (this._name == word) return this._data;
+     if (self._tail  == squashNull) return eNotFound();
+     if (self._name == word) return self._data;
      return lookup(self._tail, word);
    }
 
-   function lookupAll (self, word, acc) {
-     if (this._tail  == squashNull) {
-       if (! acc) return eNotFound();
-       else return acc;
+   function depthFirst (self, handler) {
+     if (self._tail  == squashNull) return;
+     if (handler(self) === false) return;
+     else {
+       if (self._data instanceof squash) depthFirst(self._data, handler);
+       else depthFirst(self._tail, handler);
      }
-     if (this._name == word) {
-       if (! acc) acc = [];
-       acc.push(this._data);
+   }
+
+   function iterator (self, handler) {
+     if (self._tail  == squashNull) handler(self);
+     else {
+       var tail = (self._data instanceof squash) ? self._data : self._tail;
+       handler(self, function () { iterator(tail, handler); });
      }
-     return lookupAll(self._tail, word, acc);
+   }
+
+   function lookupAll(self, word) {
+     var acc = [];
+     depthFirst(
+       self,
+       function (s) {
+         if (s._name == word) acc.push(s._data);
+       });
+     if (acc.length == 0) return eNotFound();
+     else return acc;
    }
 
    function define (word) {
@@ -35,9 +51,15 @@ var squash3;
    }
 
    function toString () {
-     var sources = {};
+     var prefix = {};
      var i, r = lookupAll(this, "from") || this.eMissingFrom();
-     for (i in r) source[r[i]] = "t" + i;
+     for (i in r) prefix[r[i]] = "t" + i;
+     var result = [];
+     depthFirst(
+       this,
+       function (s) {
+         
+       });
    }
 
    function execute () {
