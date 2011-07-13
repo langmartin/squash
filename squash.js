@@ -266,7 +266,7 @@ var squash;
         var tmp = [];
         self.eachfield(
           function (ii, field, tab) {
-              col = driver.field(tab, field);
+              col = driver.field(tab, field, "isSelect");
               if (col) tmp.push(col);
           });
         var select = ["SELECT "]; var key;
@@ -309,8 +309,7 @@ var squash;
            }
          );
        } else {
-         tmp.push(self.env.from.table);
-         tmp.push("AS", self._table());
+         tmp.push(driver.alias(self.env.from.table, self._table()));
          if (self.env.from.extra) tmp.push(self.env.from.extra);
        }
        return tmp.join(" ");
@@ -330,8 +329,11 @@ var squash;
        }
        return tmp.join(' AND ');
      }
-     result.push("WHERE");
-     result.push(where(self, driver));
+     var whereClause = where(self, driver);
+     if (whereClause) {
+       result.push("WHERE");
+       result = result.concat(whereClause);
+     }
 
      // ORDER BY & GROUP BY
      (function () {
@@ -342,7 +344,9 @@ var squash;
         }
       })();
 
-     return result.join(" ");
+     result = result.join(" ");
+     if (driver.toStringFilter) return driver.toStringFilter(self, result);
+     else return result;
    };
 
    //// Type Definitions
@@ -363,7 +367,11 @@ var squash;
    def("string",
        sqlstring,
        function (val) {
-         return "" + val;
+         if (val === null) return "";
+         if (val === undefined) return "";
+         if (val === false) return "";
+         if (val === true) return "true";
+         else return "" + val;
        });
 
    def("integer",
@@ -393,12 +401,15 @@ var squash;
    //// Default Driver
    squash.default_driver = function () {};
    squash.default_driver.prototype = {
+     alias: function (tab, alias) {
+       return [tab, alias].join(" ");
+     },
      field: function (tab, field) {
        if (! tab) return field;
        return [tab, field].join(".");
      },
      type: function (tab, field, env) {
-       var key = squash.type[field] || "string";
+       var key = (squash.type_defs[field]) ? field : "string";
        return squash.type_defs[key];
      },
      wherein: function (tab, field, op, values) {
