@@ -24,13 +24,13 @@ var squash3;
      }
    }
 
-   function iterator (self, handler) {
-     if (self._tail  == squashNull) handler(self);
-     else {
-       var tail = (self._data instanceof squash) ? self._data : self._tail;
-       handler(self, function () { iterator(tail, handler); });
-     }
-   }
+   // function iterator (self, handler) {
+   //   if (self._tail  == squashNull) handler(self);
+   //   else {
+   //     var tail = (self._data instanceof squash) ? self._data : self._tail;
+   //     handler(self, function () { iterator(tail, handler); });
+   //   }
+   // }
 
    function lookupAll(self, word) {
      var acc = [];
@@ -51,15 +51,43 @@ var squash3;
    }
 
    function toString () {
-     var prefix = {};
-     var i, r = lookupAll(this, "from") || this.eMissingFrom();
-     for (i in r) prefix[r[i]] = "t" + i;
-     var result = [];
-     depthFirst(
+     var prefix = {}, prefixCount = 0;
+     var select = [];
+
+
+     function lp (self, up) {
+       var from = lookup(self, "from");
+       
+     }
+
+     breadthFirst(
        this,
        function (s) {
-         
+         switch(s._name) {
+         case "from":
+           prefix[s._data] = "t" + prefixCount++;
+           break;
+         case "select":
+           select.push(
+             
+         if (s._name == "from") 
+         if (s._name
        });
+
+
+     var i, r = lookupAll(this, "from") || this.eMissingFrom();
+     for (i in r) prefix[r[i]] = "t" + i;
+
+     r = lookupAll(this, "select");
+     for (i in r) {
+       result.push(
+     }
+
+
+     // depthFirst(
+     //   this,
+     //   function (s) {
+     //   });
    }
 
    function execute () {
