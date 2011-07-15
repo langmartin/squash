@@ -54,40 +54,29 @@ var squash3;
      var prefix = {}, prefixCount = 0;
      var select = [];
 
-
-     function lp (self, up) {
-       var from = lookup(self, "from");
-       
-     }
-
-     breadthFirst(
-       this,
-       function (s) {
-         switch(s._name) {
-         case "from":
-           prefix[s._data] = "t" + prefixCount++;
-           break;
-         case "select":
-           select.push(
-             
-         if (s._name == "from") 
-         if (s._name
-       });
-
+     // function lp (self, up) {
+     //   var from = lookup(self, "from");
+     // }
+     // breadthFirst(
+     //   this,
+     //   function (s) {
+     //     switch(s._name) {
+     //     case "from":
+     //       prefix[s._data] = "t" + prefixCount++;
+     //       break;
+     //     case "select":
+     //       select.push(
+     //     if (s._name == "from") 
+     //     if (s._name
+     //   });
 
      var i, r = lookupAll(this, "from") || this.eMissingFrom();
      for (i in r) prefix[r[i]] = "t" + i;
 
      r = lookupAll(this, "select");
      for (i in r) {
-       result.push(
+       result.push();
      }
-
-
-     // depthFirst(
-     //   this,
-     //   function (s) {
-     //   });
    }
 
    function execute () {
