@@ -1,36 +1,48 @@
+/*
+
+from = tree, text
+and(text) = cons, and, text
+and(squash) = cons, and, recurse
+join = from
+select = cons, text
+
+*/
+
 var squash3;
 
 (function () {
-   var squashNull = {};
+   // Constructors
+   function squash () { }
+   function isNull (o) {return ((o instanceof squash)&&(!o instanceof cons));}
 
-   function squash (_tail, _name, _data) {
-     this._tail = (_tail) ? _tail : squashNull;
-     this._name = _name;
-     this._data = _data;
+   function cons (tail, name, data) {
+     squash.call(this);
+     this._tail = tail;
+     this._name = name;
+     this._data = data;
    }
 
+   function tree (tail, name, data) {
+     cons.call(this, tail, name, data);
+   }
+
+   // Iteration
    function lookup (self, word) {
-     if (self._tail  == squashNull) return eNotFound();
+     if (isNull(self._tail)) return eNotFound();
      if (self._name == word) return self._data;
      return lookup(self._tail, word);
    }
 
-   function depthFirst (self, handler) {
-     if (self._tail  == squashNull) return;
+   function depthFirst (self, handler, noRecurse) {
+     if (isNull(self._tail)) return;
      if (handler(self) === false) return;
      else {
-       if (self._data instanceof squash) depthFirst(self._data, handler);
-       else depthFirst(self._tail, handler);
+       if (! noRecurse) {
+         if (self._data instanceof squash) depthFirst(self._data, handler);
+       }
+       depthFirst(self._tail, handler);
      }
    }
-
-   // function iterator (self, handler) {
-   //   if (self._tail  == squashNull) handler(self);
-   //   else {
-   //     var tail = (self._data instanceof squash) ? self._data : self._tail;
-   //     handler(self, function () { iterator(tail, handler); });
-   //   }
-   // }
 
    function lookupAll(self, word) {
      var acc = [];
@@ -52,23 +64,8 @@ var squash3;
 
    function toString () {
      var prefix = {}, prefixCount = 0;
+     var from = depthFirst(this, "from", true);
      var select = [];
-
-     // function lp (self, up) {
-     //   var from = lookup(self, "from");
-     // }
-     // breadthFirst(
-     //   this,
-     //   function (s) {
-     //     switch(s._name) {
-     //     case "from":
-     //       prefix[s._data] = "t" + prefixCount++;
-     //       break;
-     //     case "select":
-     //       select.push(
-     //     if (s._name == "from") 
-     //     if (s._name
-     //   });
 
      var i, r = lookupAll(this, "from") || this.eMissingFrom();
      for (i in r) prefix[r[i]] = "t" + i;
@@ -88,7 +85,12 @@ var squash3;
      from:      define("from"),
      join:      define("join"),
      and:       define("and"),
+     andnot:    define("andnot"),
+     andlike:   define("andlike"),
      or:        define("or"),
+     ornot:     define("ornot"),
+     orlike:    define("orlike"),
+     split:     define("split"),
      toString:  toString,
      execute:   execute
    };
